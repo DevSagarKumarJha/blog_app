@@ -3,6 +3,7 @@ import authenticate from "../middlewares/auth.middleware.js";
 import upload from "../middlewares/upload.middleware.js";
 import {
   createPost,
+  deletePost,
   getAllPosts,
   getPostById,
   updatePost,
@@ -18,6 +19,7 @@ postRoutes
 postRoutes
   .route("/:id")
   .get(getPostById)
-  .put(authenticate, upload.single("image"), updatePost);
+  .put(authenticate, upload.single("image"), updatePost)
+  .delete(authenticate, deletePost);
 
 export default postRoutes;

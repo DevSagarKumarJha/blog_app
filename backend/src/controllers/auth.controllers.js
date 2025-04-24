@@ -7,24 +7,24 @@ const register = async (req, res) => {
   const { email, username, name, password, cnfPassword } = req.body;
 
   if (!email) {
-    res.status(400).json({ errMsg: "Email is Required" });
+    res.status(400).json({ error: "Email is Required" });
   }
 
   if (!username) {
-    res.status(400).json({ errMsg: "Username is Required" });
+    res.status(400).json({ error: "Username is Required" });
   }
 
   if (!password) {
-    res.status(400).json({ errMsg: "Passwword is Required" });
+    res.status(400).json({ error: "Passwword is Required" });
   }
 
   if (!cnfPassword) {
-    res.status(400).json({ errMsg: "Please confirm your password" });
+    res.status(400).json({ error: "Please confirm your password" });
   }
 
   if (cnfPassword !== password) {
     res.status(400).json({
-      errMsg: "Password mismatched! confirm password and password must be same",
+      error: "Password mismatched! confirm password and password must be same",
     });
   }
   try {
@@ -35,7 +35,7 @@ const register = async (req, res) => {
     });
 
     if (existingUserWithEmail) {
-      res.status(400).json({ errMsg: "email already registered! try login" });
+      res.status(400).json({ error: "email already registered! try login" });
     }
 
     const existingUserWithUsername = await db.user.findUnique({
@@ -47,7 +47,7 @@ const register = async (req, res) => {
     if (existingUserWithUsername) {
       res
         .status(400)
-        .json({ errMsg: "Username already registered! try login" });
+        .json({ error: "Username already registered! try login" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -92,7 +92,7 @@ const login = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    res.status(400).json({ errMsg: "All fields are required", success: false });
+    res.status(400).json({ error: "All fields are required", success: false });
   }
 
   try {
@@ -103,7 +103,7 @@ const login = async (req, res) => {
     });
 
     if (!user) {
-      res.status(404).json({ errMsg: "User not found", success: false });
+      res.status(404).json({ error: "User not found", success: false });
     }
 
     const isPasswordMatched = bcrypt.compare(user.password, password);
@@ -111,7 +111,7 @@ const login = async (req, res) => {
     if (!isPasswordMatched) {
       res
         .status(401)
-        .json({ errMsg: "Incorrect password! try again", success: false });
+        .json({ error: "Incorrect password! try again", success: false });
     }
 
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
@@ -135,7 +135,7 @@ const login = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ errMsg: "Internal Server Error", success: false });
+    res.status(500).json({ error: "Internal Server Error", success: false });
   }
 };
 

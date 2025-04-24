@@ -5,7 +5,7 @@ const createPost = async (req, res) => {
   const image = req.file?.filename || null;
 
   if (!title || !content) {
-    return res.status(400).json({ errMsg: "Title and content are required" });
+    return res.status(400).json({ error: "Title and content are required" });
   }
 
   try {
@@ -20,7 +20,6 @@ const createPost = async (req, res) => {
 
     res.status(201).json({ message: "Post created", post });
   } catch (error) {
-    console.log("Post Error: ", error);
     res.status(500).json({ error: "Error creating post" });
   }
 };
@@ -84,4 +83,21 @@ const updatePost = async (req, res) => {
     res.status(500).json({ error: "Error updating post" });
   }
 };
-export { createPost, getAllPosts, getPostById, updatePost };
+
+const deletePost = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const existing = await db.post.findUnique({ where: { id } });
+    if (!existing || existing.authorId !== req.user.id) {
+      return res.status(403).json({ error: "Not allowed to delete this post" });
+    }
+
+    await db.post.delete({ where: { id } });
+    res.status(200).json({ message: "Post deleted" });
+  } catch (err) {
+    res.status(500).json({ error: "Error deleting post" });
+  }
+};
+
+export { createPost, getAllPosts, getPostById, updatePost, deletePost };
