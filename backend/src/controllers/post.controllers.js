@@ -1,38 +1,5 @@
 import { db } from "../libs/db.js";
 
-/**
- * @swagger
- * /posts:
- *   post:
- *     summary: Create a new blog post
- *     tags: [Posts]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required:
- *               - title
- *               - content
- *             properties:
- *               title:
- *                 type: string
- *               content:
- *                 type: string
- *               image:
- *                 type: string
- *                 format: binary
- *     responses:
- *       201:
- *         description: Post created
- *       400:
- *         description: Title and content are required
- *       500:
- *         description: Error creating post
- */
 const createPost = async (req, res) => {
   const { title, content } = req.body;
   const image = req.file?.filename || null;
@@ -57,18 +24,6 @@ const createPost = async (req, res) => {
   }
 };
 
-/**
- * @swagger
- * /posts:
- *   get:
- *     summary: Get all blog posts
- *     tags: [Posts]
- *     responses:
- *       200:
- *         description: A list of blog posts
- *       500:
- *         description: Error fetching posts
- */
 const getAllPosts = async (req, res) => {
   try {
     const posts = await db.post.findMany({
@@ -84,27 +39,6 @@ const getAllPosts = async (req, res) => {
   }
 };
 
-/**
- * @swagger
- * /posts/{id}:
- *   get:
- *     summary: Get a single blog post by ID
- *     tags: [Posts]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Post ID
- *     responses:
- *       200:
- *         description: Post found
- *       404:
- *         description: Post not found
- *       500:
- *         description: Error fetching post
- */
 const getPostById = async (req, res) => {
   const { id } = req.params;
 
@@ -124,42 +58,6 @@ const getPostById = async (req, res) => {
   }
 };
 
-/**
- * @swagger
- * /posts/{id}:
- *   put:
- *     summary: Update a blog post
- *     tags: [Posts]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Post ID
- *     requestBody:
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             properties:
- *               title:
- *                 type: string
- *               content:
- *                 type: string
- *               image:
- *                 type: string
- *                 format: binary
- *     responses:
- *       200:
- *         description: Post updated
- *       403:
- *         description: Not allowed to update this post
- *       500:
- *         description: Error updating post
- */
 const updatePost = async (req, res) => {
   const { id } = req.params;
   const { title, content } = req.body;
@@ -186,29 +84,6 @@ const updatePost = async (req, res) => {
   }
 };
 
-/**
- * @swagger
- * /posts/{id}:
- *   delete:
- *     summary: Delete a blog post
- *     tags: [Posts]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Post ID
- *     responses:
- *       200:
- *         description: Post deleted
- *       403:
- *         description: Not allowed to delete this post
- *       500:
- *         description: Error deleting post
- */
 const deletePost = async (req, res) => {
   const { id } = req.params;
 
