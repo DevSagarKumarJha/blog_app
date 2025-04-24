@@ -1,7 +1,12 @@
 import express from "express";
 import authenticate from "../middlewares/auth.middleware.js";
 import upload from "../middlewares/upload.middleware.js";
-import { createPost, getAllPosts, getPostById } from "../controllers/post.controllers.js";
+import {
+  createPost,
+  getAllPosts,
+  getPostById,
+  updatePost,
+} from "../controllers/post.controllers.js";
 
 const postRoutes = express.Router();
 
@@ -10,5 +15,9 @@ postRoutes
   .post(authenticate, upload.single("image"), createPost)
   .get(getAllPosts);
 
-postRoutes.route("/:id").get(getPostById);
+postRoutes
+  .route("/:id")
+  .get(getPostById)
+  .put(authenticate, upload.single("image"), updatePost);
+
 export default postRoutes;

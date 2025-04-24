@@ -59,4 +59,29 @@ const getPostById = async (req, res) => {
   }
 };
 
-export { createPost, getAllPosts, getPostById };
+const updatePost = async (req, res) => {
+  const { id } = req.params;
+  const { title, content } = req.body;
+  const image = req.file?.filename;
+
+  try {
+    const existing = await db.post.findUnique({ where: { id } });
+    if (!existing || existing.authorId !== req.user.id) {
+      return res.status(403).json({ error: "Not allowed to update this post" });
+    }
+
+    const updated = await db.post.update({
+      where: { id },
+      data: {
+        title: title || existing.title,
+        content: content || existing.content,
+        image: image || existing.image,
+      },
+    });
+
+    res.status(200).json({ message: "Post updated", post: updated });
+  } catch (err) {
+    res.status(500).json({ error: "Error updating post" });
+  }
+};
+export { createPost, getAllPosts, getPostById, updatePost };
