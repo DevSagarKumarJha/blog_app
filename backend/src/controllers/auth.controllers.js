@@ -45,7 +45,9 @@ const register = async (req, res) => {
     });
 
     if (existingUserWithUsername) {
-      res.status(400).json({ errMsg: "Username already registered! try login" });
+      res
+        .status(400)
+        .json({ errMsg: "Username already registered! try login" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -77,15 +79,64 @@ const register = async (req, res) => {
         username: newUser.username,
         email: newUser.email,
         name: newUser.name,
-        role: newUser.role,
-        image: newUser.image,
       },
     });
   } catch (error) {
     res.status(500).json({
-      error: "Error user registeration",
+      error: "Internal Server Error",
     });
   }
 };
 
-export { register };
+const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    res.status(400).json({ errMsg: "All fields are required", success: false });
+  }
+
+  try {
+    const user = await db.user.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!user) {
+      res.status(404).json({ errMsg: "User not found", success: false });
+    }
+
+    const isPasswordMatched = bcrypt.compare(user.password, password);
+
+    if (!isPasswordMatched) {
+      res
+        .status(401)
+        .json({ errMsg: "Incorrect password! try again", success: false });
+    }
+
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    res.cookie("jwt", token, {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV !== "development",
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    });
+
+    res.status(200).json({
+      message: "User login successfully",
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        name: user.name,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ errMsg: "Internal Server Error", success: false });
+  }
+};
+
+export { register, login };
