@@ -8,26 +8,49 @@ const register = async (req, res) => {
 
   if (!email) return res.status(400).json({ error: "Email is Required" });
   if (!username) return res.status(400).json({ error: "Username is Required" });
-  if (!password) return res.status(400).json({ error: "Passwword is Required" });
-  if (!cnfPassword) return res.status(400).json({ error: "Please confirm your password" });
+  if (!password)
+    return res.status(400).json({ error: "Passwword is Required" });
+  if (!cnfPassword)
+    return res.status(400).json({ error: "Please confirm your password" });
   if (cnfPassword !== password)
-    return res.status(400).json({ error: "Password mismatched! confirm password and password must be same" });
+    return res.status(400).json({
+      error: "Password mismatched! confirm password and password must be same",
+    });
 
   try {
-    const existingUserWithEmail = await db.user.findUnique({ where: { email } });
-    if (existingUserWithEmail) return res.status(400).json({ error: "email already registered! try login" });
+    const existingUserWithEmail = await db.user.findUnique({
+      where: { email },
+    });
+    if (existingUserWithEmail)
+      return res
+        .status(400)
+        .json({ error: "email already registered! try login" });
 
-    const existingUserWithUsername = await db.user.findUnique({ where: { username } });
-    if (existingUserWithUsername) return res.status(400).json({ error: "Username already registered! try login" });
+    const existingUserWithUsername = await db.user.findUnique({
+      where: { username },
+    });
+    if (existingUserWithUsername)
+      return res
+        .status(400)
+        .json({ error: "Username already registered! try login" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await db.user.create({
       data: { email, username, name, password: hashedPassword },
     });
 
-    const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
-    res.set('Authorization', `Bearer ${token}`);
+    res.set("Authorization", `Bearer ${token}`);
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // true in production
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     res.status(201).json({
       message: "User created successfully",
@@ -46,20 +69,34 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
-    return res.status(400).json({ error: "All fields are required", success: false });
+    return res
+      .status(400)
+      .json({ error: "All fields are required", success: false });
 
   try {
     const user = await db.user.findUnique({ where: { email } });
-    if (!user) return res.status(404).json({ error: "User not found", success: false });
+    if (!user)
+      return res.status(404).json({ error: "User not found", success: false });
 
     const isPasswordMatched = await bcrypt.compare(password, user.password);
     if (!isPasswordMatched)
-      return res.status(401).json({ error: "Incorrect password! try again", success: false });
+      return res
+        .status(401)
+        .json({ error: "Incorrect password! try again", success: false });
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
-    res.set('Authorization', `Bearer ${token}`);
-
+    
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // true in production
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    // res.set("Authorization", `Bearer ${token}`);
+    
     res.status(200).json({
       message: "User login successfully",
       user: {
@@ -77,7 +114,7 @@ const login = async (req, res) => {
 const getMe = async (req, res) => {
   try {
     const user = await db.user.findUnique({
-      where: { id: req.user.id},
+      where: { id: req.user.id },
       select: {
         id: true,
         name: true,
