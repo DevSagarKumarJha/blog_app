@@ -3,38 +3,6 @@ import bcrypt from "bcryptjs";
 
 import { db } from "../libs/db.js";
 
-/**
- * @swagger
- * /auth/register:
- *   post:
- *     summary: Register a new user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [email, username, name, password, cnfPassword]
- *             properties:
- *               email:
- *                 type: string
- *               username:
- *                 type: string
- *               name:
- *                 type: string
- *               password:
- *                 type: string
- *               cnfPassword:
- *                 type: string
- *     responses:
- *       201:
- *         description: User created successfully
- *       400:
- *         description: Validation error
- *       500:
- *         description: Server error
- */
 const register = async (req, res) => {
   const { email, username, name, password, cnfPassword } = req.body;
 
@@ -59,12 +27,7 @@ const register = async (req, res) => {
 
     const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-    res.cookie("jwt", token, {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: process.env.NODE_ENV !== "development",
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    });
+    res.set('Authorization', `Bearer ${token}`);
 
     res.status(201).json({
       message: "User created successfully",
@@ -80,36 +43,6 @@ const register = async (req, res) => {
   }
 };
 
-/**
- * @swagger
- * /auth/login:
- *   post:
- *     summary: Login a user
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [email, password]
- *             properties:
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: User login successfully
- *       400:
- *         description: Missing fields
- *       401:
- *         description: Incorrect password
- *       404:
- *         description: User not found
- *       500:
- *         description: Server error
- */
 const login = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password)
@@ -125,12 +58,7 @@ const login = async (req, res) => {
 
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
-    res.cookie("jwt", token, {
-      httpOnly: true,
-      sameSite: "strict",
-      secure: process.env.NODE_ENV !== "development",
-      maxAge: 1000 * 60 * 60 * 24 * 7,
-    });
+    res.set('Authorization', `Bearer ${token}`);
 
     res.status(200).json({
       message: "User login successfully",
@@ -146,26 +74,10 @@ const login = async (req, res) => {
   }
 };
 
-/**
- * @swagger
- * /auth/me:
- *   get:
- *     summary: Get current logged-in user
- *     tags: [Auth]
- *     security:
- *       - cookieAuth: []
- *     responses:
- *       200:
- *         description: User data
- *       404:
- *         description: User not found
- *       500:
- *         description: Server error
- */
 const getMe = async (req, res) => {
   try {
     const user = await db.user.findUnique({
-      where: { id: req.user.id },
+      where: { id: req.user.id},
       select: {
         id: true,
         name: true,
